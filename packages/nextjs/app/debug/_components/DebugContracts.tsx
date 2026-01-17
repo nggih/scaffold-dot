@@ -32,19 +32,19 @@ export function DebugContracts() {
   }, [contractNames, selectedContract, setSelectedContract]);
 
   return (
-    <div className="flex flex-col gap-y-6 lg:gap-y-8 py-8 lg:py-12 justify-center items-center bg-base-100">
+    <div className="flex w-full flex-col gap-y-6 lg:gap-y-8 py-8 lg:py-12 items-center bg-base-100">
       {contractNames.length === 0 ? (
         <p className="text-3xl mt-14">No contracts found!</p>
       ) : (
         <>
           {contractNames.length > 1 && (
-            <div className="flex flex-row gap-2 w-full max-w-7xl pb-1 px-6 lg:px-10 flex-wrap">
+            <div className="flex flex-row gap-2 w-full max-w-6xl pb-1 px-6 lg:px-10 flex-wrap">
               {contractNames.map(contractName => (
                 <button
-                  className={`btn btn-secondary btn-sm font-light hover:border-transparent ${
+                  className={`btn btn-sm shadow-none border border-base-300/70 font-medium ${
                     contractName === selectedContract
-                      ? "bg-base-300 hover:bg-base-300 no-animation"
-                      : "bg-base-100 hover:bg-secondary"
+                      ? "bg-base-300/30 text-base-content"
+                      : "bg-transparent text-base-content/80 hover:border-primary hover:text-primary"
                   }`}
                   key={contractName}
                   onClick={() => setSelectedContract(contractName)}

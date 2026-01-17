@@ -31,7 +31,14 @@ task("deploy").setAction(async (args, hre, runSuper) => {
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  solidity: '0.8.28',
+  // solidity: '0.8.28',
+  solidity: {
+    version: "0.8.28", // or your existing version if compatible
+    settings: {
+      evmVersion: "cancun",
+      optimizer: { enabled: true, runs: 200 },
+    },
+  },
   // npm Compiler
   resolc: {
     compilerSource: 'npm',
@@ -42,7 +49,7 @@ module.exports = {
       },
     },
   },
-  
+
   // use "localhost" to deploy to local node that will connect from nextjs frontend
   // use "passetHub" to deploy to Paseo Asset Hub test network
   defaultNetwork: "localNode",
@@ -53,6 +60,7 @@ module.exports = {
   },
   networks: {
     hardhat: {
+      hardfork: "cancun",
       chainId: 31337,
     },
     localNode: {

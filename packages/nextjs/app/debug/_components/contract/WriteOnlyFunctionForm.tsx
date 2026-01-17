@@ -42,12 +42,11 @@ export const WriteOnlyFunctionForm = ({
   const { data: result, isPending, writeContractAsync } = useWriteContract();
   const wagmiConfig = useConfig();
   const writeTxn = useTransactor();
-  
+
   const handleWrite = async () => {
     if (!writeContractAsync) return;
-    
-    try {
 
+    try {
       const writeContractObj = {
         address: contractAddress,
         functionName: abiFunction.name,
@@ -56,12 +55,9 @@ export const WriteOnlyFunctionForm = ({
         value: txValue ? BigInt(txValue) : 0n,
       };
 
-
-
       await simulateContractWriteAndNotifyError({ wagmiConfig, writeContractParams: writeContractObj });
       const makeWriteWithParams = () => writeContractAsync(writeContractObj);
       await writeTxn(makeWriteWithParams);
-
 
       onChange();
     } catch (e: any) {
@@ -73,7 +69,7 @@ export const WriteOnlyFunctionForm = ({
   const { data: txResult } = useWaitForTransactionReceipt({
     hash: result,
   });
-  
+
   useEffect(() => {
     setDisplayedTxResult(txResult);
   }, [txResult]);
@@ -94,7 +90,7 @@ export const WriteOnlyFunctionForm = ({
       />
     );
   });
-  
+
   const zeroInputs = inputs.length === 0 && abiFunction.stateMutability !== "payable";
 
   return (
@@ -132,7 +128,11 @@ export const WriteOnlyFunctionForm = ({
             }`}
             data-tip={`${writeDisabled && "Wallet not connected or in the wrong network"}`}
           >
-            <button className="btn border-secondary-content btn-sm" disabled={writeDisabled || isPending} onClick={handleWrite}>
+            <button
+              className="btn btn-sm shadow-none border border-base-content/50 bg-transparent hover:border-primary hover:text-primary"
+              disabled={writeDisabled || isPending}
+              onClick={handleWrite}
+            >
               {isPending && <span className="loading loading-spinner loading-xs"></span>}
               Send 💸
             </button>

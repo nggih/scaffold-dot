@@ -18,7 +18,9 @@ const generatedContractComment = `
 `;
 
 const DEPLOYMENTS_DIR = "./deployments";
-const ARTIFACTS_DIR = "./artifacts-pvm";
+const ARTIFACTS_DIR_CANDIDATES = ["./artifacts-pvm", "./artifacts"];
+const ARTIFACTS_DIR =
+  ARTIFACTS_DIR_CANDIDATES.find(dir => fs.existsSync(`${dir}/contracts`)) ?? "./artifacts";
 
 function getDirectories(path: string) {
   return fs
@@ -81,7 +83,7 @@ function getInheritedFunctions(sources: Record<string, any>, contractName: strin
  */
 function getAllContractArtifactsFromSolFile(solFileName: string): string[] {
   const solDirPath = `${ARTIFACTS_DIR}/contracts/${solFileName}`;
-  
+
   if (!fs.existsSync(solDirPath)) {
     console.warn(`Artifacts directory not found for ${solFileName}`);
     return [];
@@ -100,7 +102,7 @@ function getAllContractArtifactsFromSolFile(solFileName: string): string[] {
  */
 function findSolFileForContract(contractName: string): string | null {
   const contractsDir = `${ARTIFACTS_DIR}/contracts`;
-  
+
   if (!fs.existsSync(contractsDir)) {
     return null;
   }
@@ -124,63 +126,63 @@ async function getContractDataFromDeployments(hre: HardhatRuntimeEnvironment, de
   // If deployed contracts are provided, use them first (prioritize over deployments directory)
   if (deployedContracts && Object.keys(deployedContracts).length > 0) {
     console.log("🎯 Using provided deployed contract addresses...");
-    
+
     // Get the network chainId
     const network = await hre.network.provider.send('eth_chainId');
     const chainId = parseInt(network, 16).toString();
     const contracts = {} as Record<string, any>;
     const processedSolFiles = new Set<string>(); // Track which .sol files we've already processed
-    
+
     // For each deployed contract, get its ABI from artifacts AND all other contracts from the same .sol file
     for (const [contractName, contractAddress] of Object.entries(deployedContracts)) {
       console.log(`Processing contract: ${contractName} at ${contractAddress}`);
-      
+
       // Find which .sol file this contract belongs to
       const solFile = findSolFileForContract(contractName);
-      
+
       if (!solFile) {
         console.warn(`Could not find .sol file for contract ${contractName}`);
         continue;
       }
-      
+
       // If we've already processed this .sol file, skip it (all artifacts from it are already added)
       if (processedSolFiles.has(solFile)) {
         console.log(`Skipping ${contractName} - already processed all contracts from ${solFile}`);
         continue;
       }
-      
+
       // Mark this .sol file as processed
       processedSolFiles.add(solFile);
-      
+
       // Get ALL contract artifacts from this .sol file (for logging)
       const allArtifacts = getAllContractArtifactsFromSolFile(solFile);
       console.log(`Found ${allArtifacts.length} artifacts in ${solFile}: ${allArtifacts.join(', ')}`);
-      
+
       // IMPORTANT: Only add the artifact that matches the deployed contract name
       // We only deployed the contract specified in contractName, not all contracts from the .sol file
       const artifactPath = `${ARTIFACTS_DIR}/contracts/${solFile}/${contractName}.json`;
-      
+
       if (!fs.existsSync(artifactPath)) {
         console.warn(`⚠️  Artifact not found for deployed contract "${contractName}" at ${artifactPath}`);
         console.warn(`   Available artifacts in ${solFile}: ${allArtifacts.join(', ')}`);
         continue;
       }
-      
+
       const { abi, metadata } = JSON.parse(fs.readFileSync(artifactPath).toString());
       const inheritedFunctions = metadata ? getInheritedFunctions(JSON.parse(metadata).sources, contractName) : {};
-      
-      contracts[contractName] = { 
-        address: contractAddress, 
-        abi, 
-        inheritedFunctions 
+
+      contracts[contractName] = {
+        address: contractAddress,
+        abi,
+        inheritedFunctions
       };
-      
+
       console.log(`✅ Added ${contractName} with address ${contractAddress}`);
     }
-    
+
     return { [chainId]: contracts };
   }
-  
+
   // If deployments directory exists, use it (hardhat-deploy style)
   if (fs.existsSync(DEPLOYMENTS_DIR)) {
     console.log("📁 Found deployments directory, reading from hardhat-deploy files...");
@@ -200,7 +202,7 @@ async function getContractDataFromDeployments(hre: HardhatRuntimeEnvironment, de
       output[chainId] = contracts;
     }
     return output;
-  } 
+  }
   // Otherwise, create empty contracts
   else {
     console.warn("No deployed contracts provided and no deployments directory found.");
